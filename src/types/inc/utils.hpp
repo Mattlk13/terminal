@@ -11,8 +11,18 @@ Author(s):
 - Mike Griese (migrie) 12-Jun-2018
 --*/
 
+#pragma once
+
 namespace Microsoft::Console::Utils
 {
+    // Function Description:
+    // - Returns -1, 0 or +1 to indicate the sign of the passed-in value.
+    template<typename T>
+    constexpr int Sign(T val) noexcept
+    {
+        return (T{ 0 } < val) - (val < T{ 0 });
+    }
+
     bool IsValidHandle(const HANDLE handle) noexcept;
 
     // Function Description:
@@ -33,29 +43,14 @@ namespace Microsoft::Console::Utils
     GUID GuidFromString(const std::wstring wstr);
     GUID CreateGuid();
 
-    std::string ColorToHexString(const COLORREF color);
-    COLORREF ColorFromHexString(const std::string wstr);
+    std::string ColorToHexString(const til::color color);
+    til::color ColorFromHexString(const std::string_view wstr);
+    std::optional<til::color> ColorFromXTermColor(const std::wstring_view wstr) noexcept;
+    std::optional<til::color> ColorFromXParseColorSpec(const std::wstring_view wstr) noexcept;
 
-    void InitializeCampbellColorTable(const gsl::span<COLORREF> table);
-    void InitializeCampbellColorTableForConhost(const gsl::span<COLORREF> table);
-    void SwapANSIColorOrderForConhost(const gsl::span<COLORREF> table);
-    void Initialize256ColorTable(const gsl::span<COLORREF> table);
-
-    // Function Description:
-    // - Fill the alpha byte of the colors in a given color table with the given value.
-    // Arguments:
-    // - table: a color table
-    // - newAlpha: the new value to use as the alpha for all the entries in that table.
-    // Return Value:
-    // - <none>
-    constexpr void SetColorTableAlpha(const gsl::span<COLORREF> table, const BYTE newAlpha) noexcept
-    {
-        const auto shiftedAlpha = newAlpha << 24;
-        for (auto& color : table)
-        {
-            WI_UpdateFlagsInMask(color, 0xff000000, shiftedAlpha);
-        }
-    }
+    bool HexToUint(const wchar_t wch, unsigned int& value) noexcept;
+    bool StringToUint(const std::wstring_view wstr, unsigned int& value);
+    std::vector<std::wstring_view> SplitString(const std::wstring_view wstr, const wchar_t delimiter);
 
     constexpr uint16_t EndianSwap(uint16_t value)
     {
@@ -85,4 +80,5 @@ namespace Microsoft::Console::Utils
     }
 
     GUID CreateV5Uuid(const GUID& namespaceGuid, const gsl::span<const gsl::byte> name);
+
 }
